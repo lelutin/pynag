@@ -1,0 +1,49 @@
+#!/usr/bin/env python
+#############################################################################
+#                                                                           #
+#    Nagios custom plugins -- A python library and a set of Nagios plugins. #
+#    Copyright (C) 2010  Revolution Linux, inc. <info@revolutionlinux.com>  #
+#                                                                           #
+#    This program is free software: you can redistribute it and/or modify   #
+#    it under the terms of the GNU General Public License as published by   #
+#    the Free Software Foundation, either version 3 of the License, or      #
+#    (at your option) any later version.                                    #
+#                                                                           #
+#    This program is distributed in the hope that it will be useful,        #
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of         #
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the          #
+#    GNU General Public License for more details.                           #
+#                                                                           #
+#    You should have received a copy of the GNU General Public License      #
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.  #
+#                                                                           #
+#############################################################################
+import re, subprocess
+import utils as nagios
+
+lifeline = re.compile(r"(\d) received")
+
+def ping_host(options, args):
+    if len(args) == 0:
+        raise nagios.ExecutionUnknown("No host IP given on the command line")
+
+    host_ip = args[0]
+    nagios.nagios_debug("Host IP: %s" % host_ip)
+
+    ping = subprocess.Popen(["ping", "-q", "-c2", host_ip], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    pingaling = ping.stdout
+
+    for line in pingaling.readlines():
+        igot = re.findall(lifeline,line)
+        if igot and int(igot[0]) != 2:
+            raise nagios.ExecutionCritical("No response from host %s" % host_ip)
+
+    if ping.wait() != 0:
+        err = ping.stderr.readline()
+        raise nagios.ExecutionUnknown("Execution failed: %s" % err[:-1])
+
+if __name__ == '__main__':
+    check_ping = nagios.Check(func=ping_host, name="PING", succ_message="Host is up")
+    check_ping.positional_args_usage("<IP address>")
+    check_ping.run()
+
