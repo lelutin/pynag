@@ -147,7 +147,7 @@ class Check(object):
     standard out. This output will not be visible by default.
 
     """
-    def __init__(self, func, name):
+    def __init__(self, func, name, extended_usage_text=None):
         """Constructor for Check.
 
         Arguments:
@@ -170,6 +170,8 @@ class Check(object):
         self.options.add_option("--cleanup-timeout",
                 dest="cleanup_timeout", type="int", default=60,
                 help="Number of seconds before the cleanup function times out")
+
+        self.extended_usage(extended_usage_text)
 
         self.old_stdout = sys.stdout
         self.cleanup_callback = None
@@ -261,12 +263,17 @@ class Check(object):
         nagios_debug("""Added new option "%s" to the parser.""" % new_option.dest)
         self.options.add_option(new_option)
 
-    def positional_args_usage(self, help_text=None):
+    def extended_usage(self, help_text=None):
         """Set the usage text for positional arguments.
 
         Define a string to append to the usage string. This is useful if your
         check uses positional arguments as optparse doesn't generate this
         automatically.
+
+        This function could also be used to set a concise description of your
+        plugin on lines just below usage. Remember this text will also be
+        present when the check exits because an invalid argument was passed via
+        the command line.
 
         Call this function with no argument to remove the extra usage text.
 

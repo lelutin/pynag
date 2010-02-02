@@ -50,7 +50,10 @@ def ping_host(options, args):
     return "Host is up"
 
 if __name__ == '__main__':
-    check_ping = nagios.Check(func=ping_host, name="PING", succ_message="Host is up")
-    check_ping.positional_args_usage("<IP address>")
+    check_ping = nagios.Check(
+        func=ping_host,
+        name="PING",
+        extended_usage_text="<IP address>"
+    )
     check_ping.run()
 
