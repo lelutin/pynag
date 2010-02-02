@@ -23,7 +23,7 @@ try:
     import utils as nagios
 except ImportError:
     import sys
-    print "Cannot use the Nagios library. Exiting"
+    print >> sys.stderr, __file__, ": Cannot use the Nagios library. Exiting"
     sys.exit(100)
 
 lifeline = re.compile(r"(\d) received")
