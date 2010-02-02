@@ -47,6 +47,8 @@ def ping_host(options, args):
         err = ping.stderr.readline()
         raise nagios.ExecutionUnknown("Execution failed: %s" % err[:-1])
 
+    return "Host is up"
+
 if __name__ == '__main__':
     check_ping = nagios.Check(func=ping_host, name="PING", succ_message="Host is up")
     check_ping.positional_args_usage("<IP address>")

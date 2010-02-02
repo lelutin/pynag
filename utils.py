@@ -147,7 +147,7 @@ class Check(object):
     standard out. This output will not be visible by default.
 
     """
-    def __init__(self, func, name, succ_message="Check completed successfully"):
+    def __init__(self, func, name):
         """Constructor for Check.
 
         Arguments:
@@ -156,10 +156,9 @@ class Check(object):
             succ_message -- A string printed upon check success.
 
         """
-        nagios_debug("""Check initialization arguments: name="%s", success message="%s".""" % (name, succ_message) )
+        nagios_debug("""Check initialization arguments: name="%s".""" % (name, ) )
         self.check = func
         self.name = name
-        self.success_message = succ_message
 
         self.options = OptionParser()
         self.options.add_option("-v", "--verbose",
@@ -309,7 +308,7 @@ class Check(object):
                 sys.stdout = NullStream()
 
             check_func = TimeoutFunction(self.check, options.timeout)
-            check_func(options, args)
+            success_message = check_func(options, args)
         except TimeoutException:
             nagios_debug("""Timeout reached.""")
             self.critical("Timeout reached (%f second%s)" % (options.timeout, (options.timeout > 1) and "s" or "") )
@@ -328,7 +327,7 @@ class Check(object):
             self.dependant(message)
         # Nothing was raised, success
         else:
-            self.success(self.success_message)
+            self.success(success_message)
 
         # This code should never be reached.. but you never know!
         sys.stdout = self.old_stdout
