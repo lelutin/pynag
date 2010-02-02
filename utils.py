@@ -22,6 +22,7 @@ import time
 import signal
 from optparse import OptionParser, Option
 
+# Standard return codes for Nagios plugins
 RETURN_CODES = {
     "OK": 0,
     "WARNING": 1,
@@ -30,15 +31,18 @@ RETURN_CODES = {
     "DEPENDANT": 4
 }
 
-# To enable debugging output for your test, set this value to True in the
-# following manner:
+# To enable debugging output for your test, set this value to True before
+# instantiating the Check object in the following manner:
 #
 # import nagios
 # nagios.DEBUG = True
 DEBUG = False
 
+# This value could be changed by the plugin to "hijack" the output. The only
+# correct use for this is probably for testing/debugging, though.
 output_stream = sys.stdout
 
+# Use this function in your check to specify your check's debugging output.
 def nagios_debug(message):
     """Print some message identified as debug output.
 
@@ -49,7 +53,7 @@ def nagios_debug(message):
     if DEBUG:
         print >> output_stream, "DEBUG: %s" % message
 
-class NullStream():
+class NullStream(object):
     """Trash stream. Do nothing with output."""
     def writelines(self, text):
         pass
@@ -60,7 +64,7 @@ class TimeoutException(Exception):
     """Exception raised on a timeout"""
     pass
 
-class TimeoutFunction:
+class TimeoutFunction(object):
     """Stop execution of a function after defined time if it is not complete.
 
     Wrap around a function and determine a timeout in number of seconds. A
@@ -70,7 +74,8 @@ class TimeoutFunction:
     WARNING: This class uses the alarm signal. Python only keeps one alarm at a
     time. Thus, if an alarm is set during execution of either the wrapped
     function or the try/except block surrounding the call, the timeout will be
-    overridden and will never stop execution of the wrapped function.
+    overridden and thus, execution of the wrapped function will never be
+    stopped by the timeout.
 
     """
     def __init__(self, function, timeout):
