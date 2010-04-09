@@ -21,7 +21,7 @@
 import re, subprocess
 from optparse import Option
 try:
-    import utils as nagios
+    import nagios
 except ImportError:
     import sys
     print >> sys.stderr, __file__, ": Cannot use the Nagios library. Exiting"
@@ -65,7 +65,7 @@ if __name__ == '__main__':
     )
     check_ping.add_option(Option(
         "-c", type="int", default=4, dest="ping_count",
-        help="Number of ICMP Ping packets that will be sent"
+        help="Number of ICMP Ping packets that will be sent (default: 4)"
     ) )
     check_ping.run()
 

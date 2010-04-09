@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 #############################################################################
 #                                                                           #
 #    Nagios custom plugins -- A python library and a set of Nagios plugins. #
@@ -149,7 +150,7 @@ class Check(object):
     """
     def __init__(self,
             func, name, extended_usage_text=None,
-            default_timeout=30, default_cleanup_timeout=60):
+            timeout=30, cleanup_timeout=60):
         """Constructor for Check.
 
         Arguments:
@@ -158,25 +159,26 @@ class Check(object):
             succ_message -- A string printed upon check success.
 
         """
+        msg = """Check initialization arguments: name="%s", """ + \
+              """timeout %d, cleanup_timeout=%d."""
         nagios_debug(
-            """Check initialization arguments: name="%s", """ % name \
-            """default_timeout %d, """ % default_timeout
-            """default_cleanup_timeout=%d.""" % default_cleanup_timeout
+             msg % (name, timeout, cleanup_timeout)
         )
         self.check = func
         self.name = name
 
         self.options = OptionParser()
         self.options.add_option("-v", "--verbose",
-                dest="verbose", action="store_true", default=False,
-                help="Let the check output more information on what is happening")
-        self.options.add_option("--timeout",
-                dest="timeout", type="int", default=default_timeout,
-                help="Number of seconds before the check times out")
-        self.options.add_option("--cleanup-timeout",
-                dest="cleanup_timeout", type="int",
-                default=default_cleanup_timeout,
-                help="Number of seconds before the cleanup function times out")
+            dest="verbose", action="store_true", default=False,
+            help="Let the check output more information on what is happening")
+        self.options.add_option( "--timeout",
+            dest="timeout", type="int", default=timeout,
+            help="Number of seconds before the check times out "
+                 "(default: %d)" % timeout )
+        self.options.add_option( "--cleanup-timeout",
+            dest="cleanup_timeout", type="int", default=cleanup_timeout,
+            help="Number of seconds before the cleanup function times out "
+                 "(default: %d seconds)" % cleanup_timeout )
 
         self.extended_usage(extended_usage_text)
 
