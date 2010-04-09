@@ -132,16 +132,19 @@ class Check(object):
     arguments.
 
     If the check function exits without raising any exception, it is considered
-    to be a success. To signify another status to Nagios, the check function
-    should raise the appropriate exception. A short message corresponding to
-    the state should be passed on to the exception's constructor:
+    to be a success and the check will have a return code of 0. The check
+    function's returned value will be used as the check status. To signify
+    another status to Nagios, the check function should raise the appropriate
+    exception. A short message corresponding to the state should be passed on
+    to the exception's constructor:
 
-        ExecutionCritical -- Indicates a critical failure.
-        ExecutionWarning -- Indicates a warning.
-        ExecutionUnknown -- The state of the check is unkown.
+        ExecutionWarning   -- Indicates a warning. Returns code 1
+        ExecutionCritical  -- Indicates a critical failure. Returns code 2
+        ExecutionUnknown   -- The state of the check is unkown. Returns code 3
+        ExecutionDependant -- A dependancy is in unknown state. Returns code 4
 
     A function can be hooked right before exiting on a timeout. This makes it
-    possible to do cleanup work to free resources.
+    possible to do cleanup work to free resources before failing.
 
     A default verbose option is created. Both the check and the cleanup
     functions can output verbose information by simply printing text to
