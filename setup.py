@@ -21,16 +21,17 @@
 
 """setuptools setup script for the Nagios plugin Python library."""
 
-from setuptools import setup, find_packages
+#from setuptools import setup, find_packages
+from distutils.core import setup
 
-VERSION="0.1"
+VERSION="1.0"
 
-setup(name="Nagios Plugin library",
+setup(name="nagpy",
     version=VERSION,
     description="Library that removes most of the repetitive work "
                 "from coding a Nagios Plugin",
     author="Gabriel Filion",
-    author_email="gabriel.filion@revolutionlinux.com",
+    author_email="gfilion@revolutionlinux.com",
     url="http://www.revolutionlinux.com/",
     license="GPL",
     platforms=["Linux"],
@@ -42,5 +43,6 @@ setup(name="Nagios Plugin library",
     check.
     """,
     keywords="nagios plugin",
-    packages=find_packages()
+    packages=["nagpy"],
+    package_dir={"nagpy": "src/nagpy"}
 )

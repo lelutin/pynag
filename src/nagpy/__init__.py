@@ -330,7 +330,8 @@ class Check(object):
             success_message = check_func(options, args)
         except TimeoutException:
             nagios_debug("""Timeout reached.""")
-            self.critical("Timeout reached (%f second%s)" % (options.timeout, (options.timeout > 1) and "s" or "") )
+            values = (options.timeout, (options.timeout > 1) and "s" or "")
+            self.unknown("Timeout reached (%f second%s)" % values )
         # The following are execution statuses signified by the check function
         except ExecutionCritical:
             (d1, message, d2) = sys.exc_info()
