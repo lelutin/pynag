@@ -260,20 +260,17 @@ class Check(object):
         nagios_debug("""Registered callback function named "%s" at "%s".""" % (cleanup.__name__, cleanup) )
         self.cleanup_callback = cleanup
 
-    def add_option(self, new_option):
+    def add_option(self, *args, **kwargs):
         """Add an option that should be parsed from command line.
 
-        This adds an option to the option parser. The "new_option" argument
-        should be an instance of Option from the optparse library. The options
+        This adds an option to the option parser. All the arguments of this
+        method will be passed on to optparse.Option's constructor. The options
         will be parsed just before execution of the check given to the Check
         constructor.
 
         """
-        if not isinstance(new_option, Option):
-            raise TypeError("Argument is not an optparse.Option instance")
-
-        nagios_debug("""Added new option "%s" to the parser.""" % new_option.dest)
-        self.options.add_option(new_option)
+        nagios_debug("""Added new option "%s" to the parser.""" % kwargs.get("dest", "") )
+        self.options.add_option(*args, **kwargs)
 
     def extended_usage(self, help_text=None):
         """Set the usage text for positional arguments.

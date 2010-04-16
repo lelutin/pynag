@@ -19,13 +19,12 @@
 #                                                                           #
 #############################################################################
 import re, subprocess
-from optparse import Option
 try:
-    import nagios
+    import nagpy as nagios
 except ImportError:
-    import sys
-    print >> sys.stderr, __file__, ": Cannot use the Nagios library. Exiting"
-    sys.exit(100)
+    file_name = __file__.split("/")[-1]
+    print file_name, "UNKNOWN: Cannot import the Nagios plugins library"
+    raise SystemExit, 3
 
 lifeline = re.compile(r"(\d) received")
 
@@ -63,9 +62,9 @@ if __name__ == '__main__':
         name="PING",
         extended_usage_text="<IP address>"
     )
-    check_ping.add_option(Option(
+    check_ping.add_option(
         "-c", type="int", default=4, dest="ping_count",
         help="Number of ICMP Ping packets that will be sent (default: 4)"
-    ) )
+    )
     check_ping.run()
 
