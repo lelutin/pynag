@@ -153,7 +153,7 @@ class Check(object):
     """
     def __init__(self,
             func, name, extended_usage_text=None,
-            timeout=30, cleanup_timeout=60):
+            timeout=10, cleanup_timeout=60):
         """Constructor for Check.
 
         Arguments:

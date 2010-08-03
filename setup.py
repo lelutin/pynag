@@ -21,10 +21,16 @@
 
 """setuptools setup script for the Nagios plugin Python library."""
 
-#from setuptools import setup, find_packages
 from distutils.core import setup
 
 VERSION="1.0"
+DESC="""
+This library provides a class that automates most tasks for Nagios plugins.
+It provides an automatic verbose mode, provides an automatic help option,
+timeouts after a defined number of seconds. And exits with the according
+code and message when the corresponding exception is raised during the
+check.
+"""
 
 setup(name="nagpy",
     version=VERSION,
@@ -35,13 +41,7 @@ setup(name="nagpy",
     url="http://www.revolutionlinux.com/",
     license="GPL",
     platforms=["Linux"],
-    long_description="""
-    This library provides a class that automates most tasks for Nagios plugins.
-    It provides an automatic verbose mode, provides an automatic help option,
-    timeouts after a defined number of seconds. And exits with the according
-    code and message when the corresponding exception is raised during the
-    check.
-    """,
+    long_description=DESC,
     keywords="nagios plugin",
     packages=["nagpy"],
     package_dir={"nagpy": "src/nagpy"}
