@@ -32,7 +32,7 @@ code and message when the corresponding exception is raised during the
 check.
 """
 
-setup(name="nagpy",
+setup(name="pynag",
     version=VERSION,
     description="Library that removes most of the repetitive work "
                 "from coding a Nagios Plugin",
@@ -43,6 +43,6 @@ setup(name="nagpy",
     platforms=["Linux"],
     long_description=DESC,
     keywords="nagios plugin",
-    packages=["nagpy"],
-    package_dir={"nagpy": "src/nagpy"}
+    packages=["pynag"],
+    package_dir={"pynag": "src/pynag"}
 )

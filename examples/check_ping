@@ -20,10 +20,9 @@
 #############################################################################
 import re, subprocess
 try:
-    import nagpy as nagios
+    import pynag as nagios
 except ImportError:
-    file_name = __file__.split("/")[-1]
-    print file_name, "UNKNOWN: Cannot import the Nagios plugins library"
+    print "UNKNOWN: Cannot import the Nagios plugins library"
     raise SystemExit, 3
 
 lifeline = re.compile(r"(\d) received")
