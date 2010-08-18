@@ -32,8 +32,8 @@ def ping_host(options, args):
         raise nagios.ExecutionUnknown("No host IP given on the command line")
 
     host_ip = args[0]
-    nagios.nagios_debug("PING: Host IP: %s" % host_ip)
-    nagios.nagios_debug("PING: Sending %d packets" % options.ping_count)
+    nagios.nagios_debug("PING: Host IP: %s", host_ip)
+    nagios.nagios_debug("PING: Sending %d packets", options.ping_count)
 
     ping = subprocess.Popen(
         ["ping", "-q", "-c%d" % options.ping_count, host_ip],

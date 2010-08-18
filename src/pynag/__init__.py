@@ -43,16 +43,15 @@ DEBUG = False
 # correct use for this is probably for testing/debugging, though.
 output_stream = sys.stdout
 
-# Use this function in your check to specify your check's debugging output.
-def nagios_debug(message):
-    """Print some message identified as debug output.
+def nagios_debug(message, *args):
+    """Print a debugging message if enabled.
 
     The message is only output if DEBUG is set to True. Use this function in
     your check to specify your check's debugging output.
 
     """
     if DEBUG:
-        print >> output_stream, "DEBUG: %s" % message
+        print >> output_stream, "DEBUG: %s" % (message % args)
 
 class NullStream(object):
     """Trash stream. Do nothing with output."""
@@ -162,11 +161,9 @@ class Check(object):
             succ_message -- A string printed upon check success.
 
         """
-        msg = """Check initialization arguments: name="%s", """ + \
-              """timeout %d, cleanup_timeout=%d."""
-        nagios_debug(
-             msg % (name, timeout, cleanup_timeout)
-        )
+        msg = ''.join(["Check initialization arguments: name=\"%s\", ",
+                       "timeout %d, cleanup_timeout=%d."])
+        nagios_debug(msg, name, timeout, cleanup_timeout)
         self.check = func
         self.name = name
 
@@ -199,23 +196,23 @@ class Check(object):
 
         """
         time_elapsed = (time.time() - self.start_time)
-        nagios_debug("Time elapsed during check: %s" % time_elapsed)
+        nagios_debug("Time elapsed during check: %s", time_elapsed)
 
         if self.cleanup_callback:
-            nagios_debug("""Invoking cleanup callback "%s".""" % self.cleanup_callback.function.__name__)
+            nagios_debug("Invoking cleanup callback \"%s\".", self.cleanup_callback.function.__name__)
             try:
                 cleanup_func = TimeoutFunction(self.cleanup_callback, self.cleanup_timeout)
                 cleanup_func(type)
             except TimeoutException:
                 pass
         else:
-            nagios_debug("""No cleanup callback defined, skipping.""")
+            nagios_debug("No cleanup callback defined, skipping.")
 
         #Restore original stdout value
         sys.stdout = self.old_stdout
 
         print "%s %s: %s" % (self.name, type, message)
-        nagios_debug("Check returned with exit code %d" % RETURN_CODES[type])
+        nagios_debug("Check returned with exit code %d", RETURN_CODES[type])
         sys.exit(RETURN_CODES[type])
 
     def critical(self, message):
@@ -257,7 +254,7 @@ class Check(object):
         if cleanup is not None and not callable(cleanup):
             raise TypeError("Cleanup callback argument must be a callable object")
 
-        nagios_debug("""Registered callback function named "%s" at "%s".""" % (cleanup.__name__, cleanup) )
+        nagios_debug("Registered callback function named \"%s\" at \"%s\".", cleanup.__name__, cleanup)
         self.cleanup_callback = cleanup
 
     def add_option(self, *args, **kwargs):
@@ -269,7 +266,7 @@ class Check(object):
         constructor.
 
         """
-        nagios_debug("""Added new option "%s" to the parser.""" % kwargs.get("dest", "") )
+        nagios_debug("Added new option \"%s\" to the parser.", kwargs.get("dest", "") )
         self.options.add_option(*args, **kwargs)
 
     def extended_usage(self, help_text=None):
@@ -326,7 +323,7 @@ class Check(object):
             check_func = TimeoutFunction(self.check, options.timeout)
             success_message = check_func(options, args)
         except TimeoutException:
-            nagios_debug("""Timeout reached.""")
+            nagios_debug("Timeout reached.")
             values = (options.timeout, (options.timeout > 1) and "s" or "")
             self.unknown("Timeout reached (%f second%s)" % values )
         # The following are execution statuses signified by the check function
