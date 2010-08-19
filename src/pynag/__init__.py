@@ -21,7 +21,8 @@
 import sys
 import time
 import signal
-from optparse import OptionParser, Option
+from optparse import OptionParser
+
 
 # Standard return codes for Nagios plugins
 RETURN_CODES = {
@@ -53,32 +54,35 @@ def nagios_debug(message, *args):
     if DEBUG:
         print >> output_stream, "DEBUG: %s" % (message % args)
 
+
 class NullStream(object):
-    """Trash stream. Do nothing with output."""
+    """Trash stream that does nothing with output."""
     def writelines(self, text):
         pass
     def write(self, text):
         pass
 
+
 class TimeoutException(Exception):
     """Exception raised on a timeout"""
     pass
+
 
 class TimeoutFunction(object):
     """Stop execution of a function after defined time if it is not complete.
 
     Wrap around a function and determine a timeout in number of seconds. A
     TimeoutException is raised if the function did not complete after the time
-    has been elapsed.
+    has been elapsed. A timeout value of 0 disables the timeout.
 
-    WARNING: This class uses the alarm signal. Python only keeps one alarm at a
-    time. Thus, if an alarm is set during execution of either the wrapped
-    function or the try/except block surrounding the call, the timeout will be
-    overridden and thus, execution of the wrapped function will never be
-    stopped by the timeout.
+    WARNING: This class uses the alarm signal. Only one alarm can be set at a
+    time. Thus, if an alarm is set during execution the wrapped function, the
+    timeout will be overridden and execution of the wrapped function will never
+    be stopped by the timeout.
 
     """
     def __init__(self, function, timeout):
+        assert(timeout >= 0)
         self.timeout = timeout
         self.function = function
 
@@ -86,6 +90,10 @@ class TimeoutFunction(object):
         raise TimeoutException()
 
     def __call__(self, *args, **kwargs):
+        if not self.timeout:
+            # Timeout disabled
+            return self.function(*args, **kwargs)
+
         old = signal.signal(signal.SIGALRM, self._handle_timeout)
         signal.alarm(self.timeout)
         try:
@@ -95,72 +103,57 @@ class TimeoutFunction(object):
         signal.alarm(0)
         return result
 
+
 class ExecutionCritical(Exception):
-    """This exception should be raised by a check function to signify a problem"""
     pass
 
 class ExecutionWarning(Exception):
-    """This exception should be raised by a check function to signify a warning"""
     pass
 
 class ExecutionUnknown(Exception):
-    """This exception should be raised if the test result is unkown"""
     pass
 
 class ExecutionDependant(Exception):
-    """This exception should be raised if the test depends on something"""
     pass
 
-class Check(object):
-    """This is a check that will be executed as a Nagios plugin.
 
-    This class defines a check that should be executed by Nagios. The
-    constructor receives a function and optionally a success message and a
-    timeout value. Passing a success message that suits your check is strongly
-    advised. The timeout value is an integer representing the time in seconds
-    allowed for the check to complete. If this much time is elapsed before the
-    check completes, the check is considered a critical failure. The default
-    timeout is 30 seconds.
+class Check(object):
+    """A check that will be executed as a Nagios plugin.
+
+    The constructor receives a function and optionally a success message and a
+    timeout integer value (seconds before execution stops). Passing a success
+    message that suits your check is strongly advised. If the timeout is
+    reached, the check is considered a critical failure. The default timeout is
+    10 seconds.
 
     The Check class also parses arguments from the command line. You can add
-    options for your check by giving an instance of Option from optparse to
-    this class' add_option method. The options will be parsed just before
-    execution of the check. Two arguments are then passed to the check
-    representing, respectively, the options and the positional arguments. The
-    check function should hence be able to receive those to values as
+    options for your check by calling add_option(). The options will be parsed
+    just before execution of the check. Two arguments are then passed to the
+    check representing the options and the positional arguments, respectively.
+    The check function should hence be able to receive those to values as
     arguments.
 
-    If the check function exits without raising any exception, it is considered
-    to be a success and the check will have a return code of 0. The check
-    function's returned value will be used as the check status. To signify
-    another status to Nagios, the check function should raise the appropriate
-    exception. A short message corresponding to the state should be passed on
-    to the exception's constructor:
+    The check function's returned value will be used as the success check
+    status. To signify another status to Nagios, the check function should
+    raise the appropriate exception. A short message corresponding to the state
+    should be passed on to the exception's constructor:
 
         ExecutionWarning   -- Indicates a warning. Returns code 1
         ExecutionCritical  -- Indicates a critical failure. Returns code 2
         ExecutionUnknown   -- The state of the check is unkown. Returns code 3
         ExecutionDependant -- A dependancy is in unknown state. Returns code 4
 
-    A function can be hooked right before exiting on a timeout. This makes it
-    possible to do cleanup work to free resources before failing.
+    A hook function can be called before exit when a timeout is reached. This
+    makes it possible to do cleanup work before failing.
 
-    A default verbose option is created. Both the check and the cleanup
-    functions can output verbose information by simply printing text to
-    standard out. This output will not be visible by default.
+    A default verbose command-line option is created. Both the check and the
+    cleanup functions can output verbose information by simply printing text to
+    standard out. This output is visible only when -v or --verbose is given on
+    the command-line.
 
     """
-    def __init__(self,
-            func, name, extended_usage_text=None,
-            timeout=10, cleanup_timeout=60):
-        """Constructor for Check.
-
-        Arguments:
-            func -- A function (the check) that must take in two arguments.
-            name -- small identifier usually in caps prepended to the output.
-            succ_message -- A string printed upon check success.
-
-        """
+    def __init__(self, func, name, extended_usage_text=None, timeout=10,
+                 cleanup_timeout=60):
         msg = ''.join(["Check initialization arguments: name=\"%s\", ",
                        "timeout %d, cleanup_timeout=%d."])
         nagios_debug(msg, name, timeout, cleanup_timeout)
@@ -173,8 +166,8 @@ class Check(object):
             help="Let the check output more information on what is happening")
         self.options.add_option( "--timeout",
             dest="timeout", type="int", default=timeout,
-            help="Number of seconds before the check times out "
-                 "(default: %d)" % timeout )
+            help="Number of seconds before the check times out. 0 disables the "
+                 "timeout (default: %d)" % timeout )
         self.options.add_option( "--cleanup-timeout",
             dest="cleanup_timeout", type="int", default=cleanup_timeout,
             help="Number of seconds before the cleanup function times out "
@@ -189,7 +182,7 @@ class Check(object):
         self.cleanup_timeout = 60
 
     def _exit(self, type, message):
-        """Exit by printing a message and returning the appropriate value.
+        """Print a message and exit with the appropriate code.
 
         This is the Nagios-compliant exit mechanism. Exiting with this code
         should only be called by the main (controller) thread.
@@ -208,7 +201,7 @@ class Check(object):
         else:
             nagios_debug("No cleanup callback defined, skipping.")
 
-        #Restore original stdout value
+        # Restore original stdout object
         sys.stdout = self.old_stdout
 
         print "%s %s: %s" % (self.name, type, message)
@@ -236,21 +229,18 @@ class Check(object):
         self._exit("DEPENDANT", message)
 
     def set_cleanup(self, cleanup=None):
-        """Set the callback to execute before exiting.
+        """Set the pre-exit callback.
 
-        This registers a callable object to be called upon termination of a check.
         The callback will be invoked just before the check exits and outputs
-        its status. A cleanup callback should usually be used to close files,
-        release locks and other resources before abandoning work.
+        its status.
 
-        To unregister a callback, call this function with no argument.
+        To unregister a callback, give None to the 'cleanup' argument.
 
         The callback will be invoked with one argument only. The argument is a
-        string corresponding to the type exit that happened and can be used to
-        determined what needs to be done.
+        string corresponding to the type of exit that happened and can be used
+        to determined what needs to be done.
 
         """
-        import collections
         if cleanup is not None and not callable(cleanup):
             raise TypeError("Cleanup callback argument must be a callable object")
 
@@ -260,10 +250,9 @@ class Check(object):
     def add_option(self, *args, **kwargs):
         """Add an option that should be parsed from command line.
 
-        This adds an option to the option parser. All the arguments of this
-        method will be passed on to optparse.Option's constructor. The options
-        will be parsed just before execution of the check given to the Check
-        constructor.
+        All the arguments of this method will be passed on to optparse.Option's
+        constructor. The options will be parsed just before execution of the
+        check.
 
         """
         nagios_debug("Added new option \"%s\" to the parser.", kwargs.get("dest", "") )
@@ -272,14 +261,9 @@ class Check(object):
     def extended_usage(self, help_text=None):
         """Set the usage text for positional arguments.
 
-        Define a string to append to the usage string. This is useful if your
-        check uses positional arguments as optparse doesn't generate this
-        automatically.
-
-        This function could also be used to set a concise description of your
-        plugin on lines just below usage. Remember this text will also be
-        present when the check exits because an invalid argument was passed via
-        the command line.
+        'help_text' will be appended to the default usage string. This is
+        useful if your check uses positional arguments since optparse doesn't
+        generate this automatically.
 
         Call this function with no argument to remove the extra usage text.
 
@@ -294,9 +278,9 @@ class Check(object):
     def run(self):
         """Run the check.
 
-        This method runs the check. It will exit with a given code and message
-        formatted according to Nagios plugin rules. To trigger an exit state
-        from within the check, simply raise an Execution* exception.
+        Exit with a given code and message formatted according to Nagios plugin
+        rules. To trigger an exit state from within the check, simply raise an
+        Execution* exception.
 
         If the check takes too much time, as defined by the timeout given to
         the constructor, execution of the check will be halted and the check
@@ -316,7 +300,7 @@ class Check(object):
 
         try:
             if not options.verbose:
-                # Divert the standard output stream to block verbose output
+                # Divert the standard output stream to hide verbose output
                 self.old_stdout = sys.stdout
                 sys.stdout = NullStream()
 
@@ -345,4 +329,3 @@ class Check(object):
 
         # This code should never be reached.. but you never know!
         sys.stdout = self.old_stdout
-
