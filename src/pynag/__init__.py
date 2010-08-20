@@ -204,7 +204,6 @@ class Check(object):
         sys.stdout = self.old_stdout
 
         print "%s %s: %s" % (self.name, type, message)
-        nagios_debug("Check returned with exit code %d", RETURN_CODES[type])
         sys.exit(RETURN_CODES[type])
 
     def critical(self, message):
