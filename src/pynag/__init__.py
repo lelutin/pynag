@@ -19,6 +19,7 @@
 #                                                                           #
 #############################################################################
 import sys
+import os
 import time
 import signal
 from optparse import OptionParser
@@ -33,12 +34,10 @@ RETURN_CODES = {
     "DEPENDANT": 4
 }
 
-# To enable debugging output for your test, set this value to True before
-# instantiating the Check object in the following manner:
-#
-# import nagios
-# nagios.DEBUG = True
-DEBUG = False
+# Debugging output can be enabled programatically by setting this value to
+# True, but the easiest and most flexible way of enabling debugging is by
+# setting the NAGIOS_DEBUG environment variable to a non-false value.
+DEBUG = os.getenv("NAGIOS_DEBUG") or False
 
 # This value could be changed by the plugin to "hijack" the output. The only
 # correct use for this is probably for testing/debugging, though.
